@@ -45,6 +45,19 @@ class Article(db.Model):
     author = db.relationship('User', backref="articles")
 
 
+# 与User一对一关系
+class UserExtension(db.Model):
+    __tablename__ = 'user_extension'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    school = db.Column(db.String(200))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+    # db.backref
+    # 1、在反向引用的时候，如果需要传递其他参数，则需要使用
+    # 2、uselist=False：表示反向引用的时候，不是一个列表，而是一个对象
+    user = db.relationship('User', backref=db.backref('extension', uselist=False))
+
+
 # 若新建关系，则先drop掉之前建立的表
 db.drop_all()
 
@@ -59,8 +72,19 @@ def one_to_many():
     article1.author = user
     article2.author = user
     db.session.add(article1, article2)
+    print(user.articles)
     db.session.commit()
     return 'otm success！'
+
+
+@app.route('/oto')
+def one_to_one():
+    user = User.query.filter_by(id=1)[0]
+    extension = UserExtension(school="Swust")
+    user.extension = extension
+    db.session.add(user)
+    db.session.commit()
+    return "one to one"
 
 
 @app.route("/article")
