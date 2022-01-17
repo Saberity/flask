@@ -1,3 +1,5 @@
 .idea/
 __pycache__/
 
+/激活虚拟环境命令.txt
+/migrations/
