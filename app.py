@@ -1,71 +1,17 @@
 from flask import Flask
 from flask_migrate import Migrate
-from flask_sqlalchemy import SQLAlchemy
+
+import config
+from extension import db
+from models import Article, User, UserExtension
 
 app = Flask(__name__)
-
-# 配置数据库
-HOST = '127.0.0.1'
-PORT = '3306'
-DATABASE = 'test'
-USERNAME = 'test'
-PASSWORD = 'mysql824.'
-
-DA_URI = 'mysql+pymysql://{}:{}@{}:{}/{}?charset=utf8'.format(
-    USERNAME, PASSWORD, HOST, PORT, DATABASE)
-
-# 指定使用的数据库
-app.config['SQLALCHEMY_DATABASE_URI'] = DA_URI
-# 跟踪数据库的修改
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config.from_object(config)
 
 # 创建一个SQLAlchemy对象,需要放在config后面
-db = SQLAlchemy(app)
+db.init_app(app)
 
 migrate = Migrate(app, db)
-
-
-class User(db.Model):
-    __tablename__ = "user"
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    username = db.Column(db.String(200), nullable=True)
-    password = db.Column(db.String(20), nullable=False)
-
-
-class Article(db.Model):
-    __tablename__ = 'article'
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    title = db.Column(db.String(200), nullable=False)
-    content = db.Column(db.Text, nullable=False)
-
-    # 外键
-    # 1、外键的数据类型与所引用的键的类型一致
-    # 2、db.ForeignKey(表名.字段)
-    author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-
-    # relationship
-    # 1、第一个参数和模型绑定
-    # 2、backref(back reference): 反向引用，代表对方访问我的时候的字段名称
-    author = db.relationship('User', backref="articles")
-
-
-# 与User一对一关系
-class UserExtension(db.Model):
-    __tablename__ = 'user_extension'
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    school = db.Column(db.String(200))
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-
-    # db.backref
-    # 1、在反向引用的时候，如果需要传递其他参数，则需要使用
-    # 2、uselist=False：表示反向引用的时候，不是一个列表，而是一个对象
-    user = db.relationship('User', backref=db.backref('extension', uselist=False))
-
-
-# 若新建关系，则先drop掉之前建立的表
-# db.drop_all()
-#
-# db.create_all()
 
 
 @app.route('/otm')
